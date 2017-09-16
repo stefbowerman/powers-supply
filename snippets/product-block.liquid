@@ -1,0 +1,91 @@
+{% comment %}
+ADDING SHOPIFY'S REVIEWS? LOOK NO FURTHER!
+
+This theme supports the Product Reviews app out of the box.
+https://apps.shopify.com/product-reviews
+
+Change 'false' to 'true' on the line below, to show them.
+{% endcomment %}
+{% assign show_product_reviews = false %}
+
+{% assign actual_product = product %}
+
+
+{% comment %}Is this product on sale?{% endcomment %}
+{% assign on_sale = false %}
+{% if actual_product.compare_at_price > actual_product.price %}
+
+{% assign on_sale = true %}
+{% endif %}
+
+{% assign product_url = actual_product.url | within: collection %}
+
+<div class="product-block{% unless actual_product.available %} sold-out{% endunless %}{% if on_sale %} on-sale{% endif %} caption-{{ section.settings.coll_captionmode }} {% if actual_product.tags contains 'meta-layout-right' %}layout-right{% endif %} {{ product_class }}" data-loop-index="{{forloop.index}}">
+  <div class="product-block__inner">
+
+    {% assign image_size = '1024x1024' %}
+
+    {% assign rollover_image_url = blank %}
+    {% capture featured_image_html %}{{ product.featured_image | product_img_url: image_size | img_tag: actual_product.title }}{% endcapture %}
+
+        {% comment "Rollover images for matching alt-text colour option" %}{% endcomment %}
+        {% if section.settings.coll_captionmode == "hide" %}
+          {% unless variant_number == blank %}
+            {% assign done_alt_image = false %}
+            {% for image in asset.images %}
+              {% unless done_alt_image %}
+                {% if image.alt == product[variant_number] %}
+                  {% unless image == product.featured_image %}
+                    {% capture rollover_image_url %}{{ image | product_img_url: image_size }}{% endcapture %}
+                    {% assign done_alt_image = true %}
+                  {% endunless %}
+                {% endif %}
+              {% endunless %}
+            {% endfor %}
+          {% endunless %}
+        {% endif %}
+    
+    
+    
+    <div class="image{% unless rollover_image_url == blank %} has-alt{% endunless %}">
+      <div class='rollover' style="background-image:url({{ rollover_image_url }});"></div>
+
+      
+      <a class="image-inner" href="{{ product_url }}">
+        
+        {{ featured_image_html }}
+        
+        
+        {% if actual_product.available == false %}
+        <span class="product-label unavailable"><span>{{ 'products.listing.sold_out' | t }}</span></span>
+        {% elsif actual_product.compare_at_price > actual_product.price %}
+        <span class="product-label sale"><span>{{ 'products.product.sale' | t }}</span></span>
+        {% endif %}
+      </a>
+    </div>
+    <div class="caption upper">
+      <a href="{{ product_url }}" class="title">{{ actual_product.title }}</a>
+    </div>
+    <div class="caption lower">
+      {% if show_product_reviews %}
+      <span class="shopify-product-reviews-badge" data-id="{{ actual_product.id }}"></span>
+      {% endif %}
+
+      <a href="{{ product_url }}" class="price">
+        {% if actual_product.price_varies %}{{ 'products.listing.from' | t }}{% endif %}
+        <span class="theme-money">{{ actual_product.price | money }}</span>
+        {% if on_sale %}<span class="was-price theme-money">{{ actual_product.compare_at_price | money }}</span>{% endif %}
+
+        {% unless actual_product.available %}<div class="sold-out">{{ 'products.listing.sold_out' | t }}</div>{% endunless %}
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if product_class contains 'quarter' %}
+{% cycle 'products': '','','','<div class="er"></div>' %}
+{% elsif product_class contains 'third' %}
+{% cycle 'products': '','','<div class="er"></div>' %}
+{% elsif product_class contains 'half' %}
+{% cycle 'products': '','<div class="er"></div>' %}
+{% endif %}
